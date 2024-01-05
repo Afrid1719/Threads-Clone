@@ -3,8 +3,12 @@ import "dotenv/config";
 import { mongoConnect } from "./db/connect";
 import app from "./app";
 
+if (!process.env.PORT) {
+  process.exit(1);
+}
+
 const server = http.createServer(app);
-const PORT: string | number = process.env.PORT || 5000;
+const PORT: number = parseInt(process.env.PORT, 10) || 3000;
 
 async function startServer() {
   try {

@@ -1,24 +1,10 @@
-import mongoose, { Schema, Types, model } from "mongoose";
-
-interface IPost {
-  postedBy: Types.ObjectId;
-  text?: string;
-  img?: string;
-  likes?: number;
-  replies?: IReply[];
-}
-
-interface IReply {
-  userId: Types.ObjectId;
-  text: string;
-  userProfilePic?: string;
-  username: string;
-}
+import { Schema, SchemaTypes, model } from "mongoose";
+import { IPost } from "../interfaces/i-post";
 
 const postSchema = new Schema<IPost>(
   {
     postedBy: {
-      type: mongoose.SchemaTypes.ObjectId,
+      type: SchemaTypes.ObjectId,
       ref: "User",
       required: true,
     },
@@ -34,7 +20,7 @@ const postSchema = new Schema<IPost>(
     replies: [
       {
         userId: {
-          type: mongoose.SchemaTypes.ObjectId,
+          type: SchemaTypes.ObjectId,
           ref: "User",
           required: true,
         },
