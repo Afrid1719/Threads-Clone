@@ -1,10 +1,13 @@
+import { Request } from "express";
 import { Types } from "mongoose";
 
 export interface IMessageResponse {
-  message: string;
+  success: boolean;
+  message?: string;
 }
 
 export interface IUser {
+  _id?: Types.ObjectId;
   name: string;
   username: string;
   email: string;
@@ -35,3 +38,7 @@ export interface IUserLoginRequest {
 }
 
 export interface IUserLoginResponse extends IUSerSignUpResponse {}
+
+export interface IAuthenticatedRequest extends Request {
+  user?: any;
+}
