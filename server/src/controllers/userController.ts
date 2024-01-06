@@ -4,13 +4,14 @@ import {
   IAuthenticatedRequest,
   IMessageResponse,
   IUSerSignUpResponse,
+  IUpdateUserRequest,
   IUser,
   IUserLoginRequest,
   IUserLoginResponse,
   IUserSignUpRequest,
 } from "../interfaces/i-user";
 import User from "../models/userModel";
-import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie";
+import generateTokenAndSetCookie from "../utils/generateTokenAndSetCookie";
 
 export const getUserById = async (
   _req: Request,
@@ -126,7 +127,7 @@ export const logoutUser = (_req: Request, _res: Response<IMessageResponse>) => {
 };
 
 export const toggleUserFollower = async (
-  _req: IAuthenticatedRequest,
+  _req: IAuthenticatedRequest<{}>,
   _res: Response<IMessageResponse>
 ) => {
   try {
@@ -177,7 +178,7 @@ export const toggleUserFollower = async (
 };
 
 export const updateUser = async (
-  _req: IAuthenticatedRequest,
+  _req: IAuthenticatedRequest<IUpdateUserRequest>,
   _res: Response<IMessageResponse | any>
 ) => {
   try {
@@ -190,6 +191,12 @@ export const updateUser = async (
       });
     }
     const { name, username, email, profilePic, bio, password } = _req.body;
+    if (!name && !username && !email && !profilePic && !bio && !password) {
+      return _res.status(400).json({
+        success: false,
+        message: "Empty fields provided.",
+      });
+    }
     let user = await User.findById(id);
     if (!user) {
       return _res.status(500).json({

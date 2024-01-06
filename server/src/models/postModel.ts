@@ -14,8 +14,9 @@ const postSchema = new Schema<IPost>(
     },
     img: String,
     likes: {
-      type: Number,
-      default: 0,
+      type: [SchemaTypes.ObjectId],
+      ref: "User",
+      default: [],
     },
     replies: [
       {

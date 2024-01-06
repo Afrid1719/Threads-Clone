@@ -1,5 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import { IAuthenticatedRequest, IMessageResponse } from "../interfaces/i-user";
+import {
+  IAuthenticatedRequest,
+  IMessageResponse,
+  IUser,
+} from "../interfaces/i-user";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel";
 
@@ -19,12 +23,18 @@ export const authorizedRoute = async (
     if (!token) {
       return _res
         .status(401)
-        .json({ success: false, message: "Unauthorized!" });
+        .json({ success: false, message: "Unauthenticated!" });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     //@ts-ignore
     const user = await User.findById(decoded.userId).select("-password");
-    _req.user = user;
+    if (!user) {
+      return _res.status(500).json({
+        success: false,
+        message: "User doesn't exists!",
+      });
+    }
+    _req.user = user as IUser;
     next();
   } catch (err: any) {
     _res.status(500).json({ success: false, message: err.message });

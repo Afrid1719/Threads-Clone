@@ -39,6 +39,15 @@ export interface IUserLoginRequest {
 
 export interface IUserLoginResponse extends IUSerSignUpResponse {}
 
-export interface IAuthenticatedRequest extends Request {
+export interface IAuthenticatedRequest<T = any> extends Request<any, any, T> {
   user?: any;
+}
+
+export interface IUpdateUserRequest {
+  name?: string;
+  email?: string;
+  username?: string;
+  password?: string;
+  profilePic?: string;
+  bio?: string;
 }

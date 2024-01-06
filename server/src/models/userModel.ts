@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, SchemaTypes, model } from "mongoose";
 import { IUser } from "../interfaces/i-user";
 
 const userSchema = new Schema<IUser>(
@@ -27,11 +27,13 @@ const userSchema = new Schema<IUser>(
       default: "",
     },
     followers: {
-      type: [String],
+      type: [SchemaTypes.ObjectId],
+      ref: "User",
       default: [],
     },
     following: {
-      type: [String],
+      type: [SchemaTypes.ObjectId],
+      ref: "User",
       default: [],
     },
     bio: {
