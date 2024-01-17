@@ -5,6 +5,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { StyleFunctionProps, mode } from "@chakra-ui/theme-tools";
 import { BrowserRouter } from "react-router-dom";
+import { RecoilRoot } from "recoil";
 
 const styles = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,10 +34,12 @@ const theme = extendTheme({ config, styles, colors });
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <ChakraProvider theme={theme}>
-        <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-        <App />
-      </ChakraProvider>
+      <RecoilRoot>
+        <ChakraProvider theme={theme}>
+          <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+          <App />
+        </ChakraProvider>
+      </RecoilRoot>
     </BrowserRouter>
   </React.StrictMode>
 );
