@@ -45,7 +45,7 @@ export const signupUser = async (
     if (!!user.length) {
       return _res
         .status(400)
-        .json({ success: true, message: "User already exists" });
+        .json({ success: false, message: "User already exists" });
     }
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(password, salt);

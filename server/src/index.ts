@@ -8,7 +8,7 @@ if (!process.env.PORT) {
 }
 
 const server = http.createServer(app);
-const PORT: number = parseInt(process.env.PORT, 10) || 3000;
+const PORT: number = parseInt(process.env.PORT, 10) || 5000;
 
 async function startServer() {
   try {
