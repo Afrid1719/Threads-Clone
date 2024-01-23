@@ -1,3 +1,13 @@
+export interface IUser {
+  id?: string;
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+  bio: string;
+  profilePic?: string;
+}
+
 export interface IUserSignUpRequest {
   name: string;
   username: string;
@@ -5,12 +15,14 @@ export interface IUserSignUpRequest {
   email: string;
 }
 
-export interface IUserSignUpResponse {
-  id: string;
-  name: string;
+export interface IUserSignUpResponse extends IUser {}
+
+export interface IUserLoginRequest {
   username: string;
-  email: string;
+  password: string;
 }
+
+export interface IUserLoginResponse extends IUser {}
 
 export interface IMessageResponse {
   success: boolean;

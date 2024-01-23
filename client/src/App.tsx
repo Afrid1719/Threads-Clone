@@ -9,6 +9,7 @@ import { useRecoilValue } from "recoil";
 import { IUserSignUpResponse } from "./interfaces/i-user";
 import { userAtom } from "./atoms/userAtom";
 import LogoutButton from "./components/LogoutButton";
+import UpdateProfilePage from "./pages/UpdateProfilePage";
 
 const App = () => {
   const user: IUserSignUpResponse | null = useRecoilValue(userAtom);
@@ -24,10 +25,14 @@ const App = () => {
           path="/auth"
           element={!user ? <AuthPage /> : <Navigate to="/" />}
         />
+        <Route
+          path="/edit/profile"
+          element={user ? <UpdateProfilePage /> : <Navigate to="/auth" />}
+        />
         <Route path="/:username" element={<UserPage />} />
         <Route path="/:username/post/:pid" element={<PostPage />} />
       </Routes>
-      {user && <LogoutButton />}
+      {!!user && <LogoutButton />}
     </Container>
   );
 };

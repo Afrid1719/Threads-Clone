@@ -30,6 +30,8 @@ export interface IUSerSignUpResponse {
   name: string;
   username: string;
   email: string;
+  bio: string;
+  profilePic: string;
 }
 
 export interface IUserLoginRequest {

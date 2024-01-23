@@ -63,6 +63,8 @@ export const signupUser = async (
         username: newUser.username,
         name: newUser.username,
         email: newUser.email,
+        bio: newUser.bio || "",
+        profilePic: newUser.profilePic || "",
       });
     } else {
       return _res.status(400).json({
@@ -107,6 +109,8 @@ export const loginUser = async (
       username: foundUser.username,
       name: foundUser.username,
       email: foundUser.email,
+      bio: foundUser.bio || "",
+      profilePic: foundUser.profilePic || "",
     });
   } catch (err: any) {
     _res.status(500).json({ success: false, message: err.message });

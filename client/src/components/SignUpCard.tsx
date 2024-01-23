@@ -24,11 +24,13 @@ import {
   IUserSignUpResponse,
 } from "../interfaces/i-user";
 import useShowToast from "../hooks/useShowToast";
+import { userAtom } from "../atoms/userAtom";
 
 const SignUpCard = () => {
   const showToast = useShowToast();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const setAuthScreen = useSetRecoilState(authScreenAtom);
+  const setUser = useSetRecoilState(userAtom);
   const [inputs, setInputs] = useState<IUserSignUpRequest>({
     name: "",
     username: "",
@@ -75,6 +77,7 @@ const SignUpCard = () => {
       }
       showToast("Success", "Account created successfully!", "success");
       localStorage.setItem("user-threads", JSON.stringify(data));
+      setUser(data as IUserSignUpResponse);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log(error.message);
