@@ -27,6 +27,7 @@ import useShowToast from "../hooks/useShowToast";
 import { userAtom } from "../atoms/userAtom";
 
 const SignUpCard = () => {
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const showToast = useShowToast();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const setAuthScreen = useSetRecoilState(authScreenAtom);
@@ -63,6 +64,7 @@ const SignUpCard = () => {
   const handleSignup = async (evt: React.FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
     try {
+      setIsSubmitting(true);
       const res = await fetch("/api/users/signup", {
         method: "POST",
         headers: {
@@ -82,6 +84,8 @@ const SignUpCard = () => {
     } catch (error: any) {
       console.log(error.message);
       showToast("Error", error?.message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -163,6 +167,7 @@ const SignUpCard = () => {
                     bg: useColorModeValue("gray.700", "gray.800"),
                   }}
                   type="submit"
+                  isLoading={isSubmitting}
                 >
                   Sign up
                 </Button>

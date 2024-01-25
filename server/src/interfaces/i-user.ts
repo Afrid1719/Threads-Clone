@@ -25,7 +25,7 @@ export interface IUserSignUpRequest {
   password: string;
 }
 
-export interface IUSerSignUpResponse {
+export interface IUserSignUpResponse {
   id: Types.ObjectId;
   name: string;
   username: string;
@@ -39,7 +39,7 @@ export interface IUserLoginRequest {
   password: string;
 }
 
-export interface IUserLoginResponse extends IUSerSignUpResponse {}
+export interface IUserLoginResponse extends IUserSignUpResponse {}
 
 export interface IAuthenticatedRequest<T = any> extends Request<any, any, T> {
   user?: any;
@@ -53,3 +53,5 @@ export interface IUpdateUserRequest {
   profilePic?: string;
   bio?: string;
 }
+
+export interface IUpdateUserResponse extends IUserSignUpResponse {}

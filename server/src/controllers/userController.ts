@@ -1,17 +1,20 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
+import { v2 as cloudinary } from "cloudinary";
 import {
   IAuthenticatedRequest,
   IMessageResponse,
-  IUSerSignUpResponse,
+  IUserSignUpResponse,
   IUpdateUserRequest,
   IUser,
   IUserLoginRequest,
   IUserLoginResponse,
   IUserSignUpRequest,
+  IUpdateUserResponse,
 } from "../interfaces/i-user";
 import User from "../models/userModel";
 import generateTokenAndSetCookie from "../utils/generateTokenAndSetCookie";
+import { profile } from "console";
 
 export const getUserById = async (
   _req: Request,
@@ -37,7 +40,7 @@ export const getUserById = async (
 
 export const signupUser = async (
   _req: Request<{}, {}, IUserSignUpRequest>,
-  _res: Response<IUSerSignUpResponse | IMessageResponse>
+  _res: Response<IUserSignUpResponse | IMessageResponse>
 ) => {
   try {
     const { name, email, username, password } = _req.body;
@@ -183,7 +186,7 @@ export const toggleUserFollower = async (
 
 export const updateUser = async (
   _req: IAuthenticatedRequest<IUpdateUserRequest>,
-  _res: Response<IMessageResponse | any>
+  _res: Response<IMessageResponse | IUpdateUserResponse>
 ) => {
   try {
     const { id } = _req.params;
@@ -194,7 +197,8 @@ export const updateUser = async (
         message: "You cannot update other user's profile.",
       });
     }
-    const { name, username, email, profilePic, bio, password } = _req.body;
+    let { profilePic } = _req.body;
+    const { name, username, email, bio, password } = _req.body;
     if (!name && !username && !email && !profilePic && !bio && !password) {
       return _res.status(400).json({
         success: false,
@@ -213,13 +217,31 @@ export const updateUser = async (
       const hashedPassword = await bcrypt.hash(password, salt);
       user.password = hashedPassword || user.password;
     }
+
+    if (profilePic) {
+      if (user.profilePic) {
+        await cloudinary.uploader.destroy(
+          user.profilePic?.split("/")?.pop()?.split(".")[0] as string
+        );
+      }
+      const uploadResponse = await cloudinary.uploader.upload(profilePic);
+      profilePic = uploadResponse.secure_url;
+    }
+
     user.name = name || user.name;
     user.email = email || user.email;
     user.username = username || user.username;
     user.profilePic = profilePic || user.profilePic;
     user.bio = bio || user.bio;
     await user.save();
-    _res.status(204).json({});
+    _res.status(200).json({
+      id: user._id,
+      username: user.username,
+      name: user.username,
+      email: user.email,
+      bio: user.bio || "",
+      profilePic: user.profilePic || "",
+    });
   } catch (err: any) {
     _res.status(500).json({ success: false, message: err.message });
     console.error("Error while udpating the user: ", err.message);

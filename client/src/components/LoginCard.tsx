@@ -27,7 +27,8 @@ import { userAtom } from "../atoms/userAtom";
 
 const LoginCard = () => {
   const showToast = useShowToast();
-  const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const setAuthScreen = useSetRecoilState(authScreenAtom);
   const setUser = useSetRecoilState(userAtom);
   const [credentials, setCredentials] = useState<IUserLoginRequest>({
@@ -48,8 +49,8 @@ const LoginCard = () => {
   };
   const handleLogin = async (evt: React.FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
-    console.log(credentials);
     try {
+      setIsLoggingIn(true);
       const res = await fetch("/api/users/login", {
         method: "POST",
         headers: {
@@ -69,6 +70,8 @@ const LoginCard = () => {
     } catch (error: any) {
       console.log(error.message);
       showToast("Error", error?.message, "error");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
   return (
@@ -118,6 +121,7 @@ const LoginCard = () => {
                 <Button
                   type="submit"
                   loadingText="Logging In"
+                  isLoading={isLoggingIn}
                   size="lg"
                   bg={useColorModeValue("gray.600", "gray.700")}
                   color={"white"}

@@ -12,13 +12,19 @@ import {
   InputGroup,
   InputRightElement,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { IUser } from "../interfaces/i-user";
 import { useRecoilState } from "recoil";
 import { userAtom } from "../atoms/userAtom";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import usePreviewImage from "../hooks/usePreviewImage";
+import useShowToast from "../hooks/useShowToast";
 
 const UpdateProfilePage = () => {
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const showToast = useShowToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { imgUrl, handleImageChange } = usePreviewImage();
   const [user, setUser] = useRecoilState(userAtom);
   const [showPassword, setShowPassword] = useState(false);
   const [inputs, setInputs] = useState<IUser>({
@@ -29,108 +35,184 @@ const UpdateProfilePage = () => {
     password: "",
     profilePic: user?.profilePic || "",
   });
+
+  const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
+    evt.preventDefault();
+    try {
+      setIsSaving(true);
+      const res = await fetch(`/api/users/${user?.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...inputs, profilePic: imgUrl }),
+      });
+      const data = await res.json();
+      showToast("Success", "Profile updated successfully!", "success");
+      setUser(data);
+      localStorage.setItem("user-threads", JSON.stringify(data));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.log(error.message);
+      showToast("Error", error?.message, "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
-    <Flex align={"center"} justify={"center"} my={"6"}>
-      <Stack
-        spacing={4}
-        w={"full"}
-        maxW={"md"}
-        bg={useColorModeValue("white", "gray.dark")}
-        rounded={"xl"}
-        boxShadow={"lg"}
-        p={6}
-        my={12}
-      >
-        <Heading lineHeight={1.1} fontSize={{ base: "2xl", sm: "3xl" }}>
-          User Profile Edit
-        </Heading>
-        <FormControl>
-          <Stack direction={["column", "row"]} spacing={6}>
-            <Center>
-              <Avatar size="xl" boxShadow={"md"} src={inputs.profilePic} />
-            </Center>
-            <Center w="full">
-              <Button w="full">Change Avatar</Button>
-            </Center>
-          </Stack>
-        </FormControl>
-        <FormControl isRequired>
-          <FormLabel>Full name</FormLabel>
-          <Input
-            placeholder="John Doe"
-            _placeholder={{ color: "gray.500" }}
-            type="text"
-            value={inputs.name}
-          />
-        </FormControl>
-        <FormControl isRequired>
-          <FormLabel>User name</FormLabel>
-          <Input
-            placeholder="UserName"
-            _placeholder={{ color: "gray.500" }}
-            type="text"
-            value={inputs.username}
-          />
-        </FormControl>
-        <FormControl isRequired>
-          <FormLabel>Email address</FormLabel>
-          <Input
-            placeholder="your-email@example.com"
-            _placeholder={{ color: "gray.500" }}
-            type="email"
-            value={inputs.email}
-          />
-        </FormControl>
-        <FormControl isRequired>
-          <FormLabel>Bio</FormLabel>
-          <Input
-            placeholder="Your Bio."
-            _placeholder={{ color: "gray.500" }}
-            type="text"
-            value={inputs.bio}
-          />
-        </FormControl>
-        <FormControl isRequired>
-          <FormLabel>Password</FormLabel>
-          <InputGroup>
+    <form onSubmit={handleSubmit}>
+      <Flex align={"center"} justify={"center"} my={"6"}>
+        <Stack
+          spacing={4}
+          w={"full"}
+          maxW={"md"}
+          bg={useColorModeValue("white", "gray.dark")}
+          rounded={"xl"}
+          boxShadow={"lg"}
+          p={6}
+          my={12}
+        >
+          <Heading lineHeight={1.1} fontSize={{ base: "2xl", sm: "3xl" }}>
+            User Profile Edit
+          </Heading>
+          <FormControl>
+            <Stack direction={["column", "row"]} spacing={6}>
+              <Center>
+                <Avatar
+                  size="xl"
+                  boxShadow={"md"}
+                  src={imgUrl ?? inputs.profilePic}
+                />
+              </Center>
+              <Center w="full">
+                <Button w="full" onClick={() => fileInputRef.current?.click()}>
+                  Change Avatar
+                </Button>
+                <Input
+                  w="full"
+                  type="file"
+                  hidden
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                />
+              </Center>
+            </Stack>
+          </FormControl>
+          <FormControl>
+            <FormLabel>Full name</FormLabel>
             <Input
-              type={showPassword ? "text" : "password"}
+              placeholder="John Doe"
               _placeholder={{ color: "gray.500" }}
+              type="text"
+              value={inputs.name}
+              onChange={(evt: React.FormEvent<HTMLInputElement>) =>
+                setInputs({
+                  ...inputs,
+                  name: (evt.target as HTMLInputElement).value,
+                })
+              }
             />
-            <InputRightElement h={"full"}>
-              <Button
-                variant={"ghost"}
-                onClick={() => setShowPassword((showPassword) => !showPassword)}
-              >
-                {showPassword ? <ViewIcon /> : <ViewOffIcon />}
-              </Button>
-            </InputRightElement>
-          </InputGroup>
-        </FormControl>
-        <Stack spacing={6} direction={["column", "row"]}>
-          <Button
-            bg={"red.400"}
-            color={"white"}
-            w="full"
-            _hover={{
-              bg: "red.500",
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            bg={"green.400"}
-            color={"white"}
-            w="full"
-            _hover={{
-              bg: "green.500",
-            }}
-          >
-            Submit
-          </Button>
+          </FormControl>
+          <FormControl isRequired>
+            <FormLabel>User name</FormLabel>
+            <Input
+              placeholder="UserName"
+              _placeholder={{ color: "gray.500" }}
+              type="text"
+              value={inputs.username}
+              onChange={(evt: React.FormEvent<HTMLInputElement>) =>
+                setInputs({
+                  ...inputs,
+                  username: (evt.target as HTMLInputElement).value,
+                })
+              }
+            />
+          </FormControl>
+          <FormControl isRequired>
+            <FormLabel>Email address</FormLabel>
+            <Input
+              placeholder="your-email@example.com"
+              _placeholder={{ color: "gray.500" }}
+              type="email"
+              value={inputs.email}
+              onChange={(evt: React.FormEvent<HTMLInputElement>) =>
+                setInputs({
+                  ...inputs,
+                  email: (evt.target as HTMLInputElement).value,
+                })
+              }
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>Bio</FormLabel>
+            <Input
+              placeholder="Your Bio."
+              _placeholder={{ color: "gray.500" }}
+              type="text"
+              value={inputs.bio}
+              onChange={(evt: React.FormEvent<HTMLInputElement>) =>
+                setInputs({
+                  ...inputs,
+                  bio: (evt.target as HTMLInputElement).value,
+                })
+              }
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>Password</FormLabel>
+            <InputGroup>
+              <Input
+                type={showPassword ? "text" : "password"}
+                _placeholder={{ color: "gray.500" }}
+                placeholder="Password"
+                onChange={(evt: React.FormEvent<HTMLInputElement>) =>
+                  setInputs({
+                    ...inputs,
+                    password: (evt.target as HTMLInputElement).value,
+                  })
+                }
+              />
+              <InputRightElement h={"full"}>
+                <Button
+                  variant={"ghost"}
+                  onClick={() =>
+                    setShowPassword((showPassword) => !showPassword)
+                  }
+                >
+                  {showPassword ? <ViewIcon /> : <ViewOffIcon />}
+                </Button>
+              </InputRightElement>
+            </InputGroup>
+          </FormControl>
+          <Stack spacing={6} direction={["column", "row"]}>
+            <Button
+              bg={"red.400"}
+              color={"white"}
+              w="full"
+              _hover={{
+                bg: "red.500",
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              bg={"green.400"}
+              color={"white"}
+              w="full"
+              _hover={{
+                bg: "green.500",
+              }}
+              loadingText="Saving"
+              isLoading={isSaving}
+            >
+              Save
+            </Button>
+          </Stack>
         </Stack>
-      </Stack>
-    </Flex>
+      </Flex>
+    </form>
   );
 };
 
