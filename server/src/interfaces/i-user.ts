@@ -11,11 +11,12 @@ export interface IUser {
   name: string;
   username: string;
   email: string;
-  password: string;
-  profilePic?: string;
-  followers?: string[];
-  following?: string[];
-  bio?: string;
+  password?: string;
+  profilePic: string;
+  followers: Types.ObjectId[];
+  following: Types.ObjectId[];
+  bio: string;
+  createdAt?: string;
 }
 
 export interface IUserSignUpRequest {

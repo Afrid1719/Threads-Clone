@@ -4,32 +4,63 @@ import { v2 as cloudinary } from "cloudinary";
 import {
   IAuthenticatedRequest,
   IMessageResponse,
-  IUserSignUpResponse,
   IUpdateUserRequest,
   IUser,
   IUserLoginRequest,
-  IUserLoginResponse,
   IUserSignUpRequest,
-  IUpdateUserResponse,
 } from "../interfaces/i-user";
 import User from "../models/userModel";
 import generateTokenAndSetCookie from "../utils/generateTokenAndSetCookie";
-import { profile } from "console";
+import { transformUserResponse } from "../utils/transformResponse";
 
 export const getUserById = async (
   _req: Request,
-  _res: Response<IMessageResponse | any>
+  _res: Response<IMessageResponse | IUser>
 ) => {
   try {
     const { id } = _req.params;
     if (!id) {
       return _res.status(400).json({
         success: false,
-        message: "User id is not found!",
+        message: "User id missing!",
       });
     }
-    const user = await User.findById(id).select("-password -__v");
-    _res.status(200).json(user);
+    const user = await User.findById(id).select("-password -__v -createdAt");
+    if (!user) {
+      return _res.status(404).json({
+        success: false,
+        message: "User does not exist!",
+      });
+    }
+    _res.status(200).json(transformUserResponse(user));
+  } catch (err: any) {
+    return _res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+export const getUserByUsername = async (
+  _req: Request,
+  _res: Response<IMessageResponse | IUser>
+) => {
+  try {
+    const { username } = _req.params;
+    if (!username) {
+      return _res.status(400).json({
+        success: false,
+        message: "Username is missing!",
+      });
+    }
+    const user = await User.findOne({ username }).select("-password -__v");
+    if (!user) {
+      return _res.status(404).json({
+        success: false,
+        message: "User does not exist!",
+      });
+    }
+    _res.status(200).json(transformUserResponse(user));
   } catch (err: any) {
     return _res.status(500).json({
       success: false,
@@ -40,7 +71,7 @@ export const getUserById = async (
 
 export const signupUser = async (
   _req: Request<{}, {}, IUserSignUpRequest>,
-  _res: Response<IUserSignUpResponse | IMessageResponse>
+  _res: Response<IUser | IMessageResponse>
 ) => {
   try {
     const { name, email, username, password } = _req.body;
@@ -61,14 +92,7 @@ export const signupUser = async (
     await newUser.save();
     if (newUser) {
       generateTokenAndSetCookie(newUser._id, _res);
-      return _res.status(200).json({
-        id: newUser._id,
-        username: newUser.username,
-        name: newUser.username,
-        email: newUser.email,
-        bio: newUser.bio || "",
-        profilePic: newUser.profilePic || "",
-      });
+      return _res.status(200).json(transformUserResponse(newUser));
     } else {
       return _res.status(400).json({
         success: false,
@@ -83,7 +107,7 @@ export const signupUser = async (
 
 export const loginUser = async (
   _req: Request<{}, {}, IUserLoginRequest>,
-  _res: Response<IUserLoginResponse | IMessageResponse>
+  _res: Response<IUser | IMessageResponse>
 ) => {
   try {
     const { username, password } = _req.body;
@@ -95,7 +119,7 @@ export const loginUser = async (
     }
     const foundUser = await User.findOne({
       $or: [{ username }, { email: username }],
-    });
+    }).select("-createdAt -updatedAt -__v");
     const passwordMatched = await bcrypt.compare(
       password,
       foundUser?.password || ""
@@ -107,14 +131,7 @@ export const loginUser = async (
       });
     }
     generateTokenAndSetCookie(foundUser._id, _res);
-    _res.status(200).json({
-      id: foundUser._id,
-      username: foundUser.username,
-      name: foundUser.username,
-      email: foundUser.email,
-      bio: foundUser.bio || "",
-      profilePic: foundUser.profilePic || "",
-    });
+    _res.status(200).json(transformUserResponse(foundUser));
   } catch (err: any) {
     _res.status(500).json({ success: false, message: err.message });
     console.error("Error while logging in user: ", err.message);
@@ -186,7 +203,7 @@ export const toggleUserFollower = async (
 
 export const updateUser = async (
   _req: IAuthenticatedRequest<IUpdateUserRequest>,
-  _res: Response<IMessageResponse | IUpdateUserResponse>
+  _res: Response<IMessageResponse | IUser>
 ) => {
   try {
     const { id } = _req.params;
@@ -234,14 +251,7 @@ export const updateUser = async (
     user.profilePic = profilePic || user.profilePic;
     user.bio = bio || user.bio;
     await user.save();
-    _res.status(200).json({
-      id: user._id,
-      username: user.username,
-      name: user.username,
-      email: user.email,
-      bio: user.bio || "",
-      profilePic: user.profilePic || "",
-    });
+    _res.status(200).json(transformUserResponse(user));
   } catch (err: any) {
     _res.status(500).json({ success: false, message: err.message });
     console.error("Error while udpating the user: ", err.message);

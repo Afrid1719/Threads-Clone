@@ -20,7 +20,7 @@ import authScreenAtom from "../atoms/authAtom";
 import {
   IMessageResponse,
   IUserLoginRequest,
-  IUserLoginResponse,
+  IUser,
 } from "../interfaces/i-user";
 import useShowToast from "../hooks/useShowToast";
 import { userAtom } from "../atoms/userAtom";
@@ -58,14 +58,14 @@ const LoginCard = () => {
         },
         body: JSON.stringify(credentials),
       });
-      const data: IUserLoginResponse | IMessageResponse = await res.json();
+      const data: IUser | IMessageResponse = await res.json();
       if ((data as IMessageResponse).success === false) {
         showToast("Error", (data as IMessageResponse)?.message, "error");
         return;
       }
       showToast("Success", "User logged in successfully!", "success");
       localStorage.setItem("user-threads", JSON.stringify(data));
-      setUser(data as IUserLoginResponse);
+      setUser(data as IUser);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log(error.message);

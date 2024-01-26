@@ -13,7 +13,7 @@ import {
   InputRightElement,
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
-import { IUser } from "../interfaces/i-user";
+import { IMessageResponse, IUser } from "../interfaces/i-user";
 import { useRecoilState } from "recoil";
 import { userAtom } from "../atoms/userAtom";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
@@ -25,7 +25,7 @@ const UpdateProfilePage = () => {
   const showToast = useShowToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { imgUrl, handleImageChange } = usePreviewImage();
-  const [user, setUser] = useRecoilState(userAtom);
+  const [user, setUser] = useRecoilState<IUser>(userAtom);
   const [showPassword, setShowPassword] = useState(false);
   const [inputs, setInputs] = useState<IUser>({
     name: user?.name || "",
@@ -40,20 +40,25 @@ const UpdateProfilePage = () => {
     evt.preventDefault();
     try {
       setIsSaving(true);
-      const res = await fetch(`/api/users/${user?.id}`, {
+      const res = await fetch(`/api/users/${user?._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ ...inputs, profilePic: imgUrl }),
       });
-      const data = await res.json();
+      const data: IUser | IMessageResponse = await res.json();
+      if ((data as IMessageResponse).success === false) {
+        console.error((data as IMessageResponse).message);
+        showToast("Failed", (data as IMessageResponse).message, "error");
+        return;
+      }
       showToast("Success", "Profile updated successfully!", "success");
-      setUser(data);
-      localStorage.setItem("user-threads", JSON.stringify(data));
+      setUser(data as IUser);
+      localStorage.setItem("user-threads", JSON.stringify(data as IUser));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.log(error.message);
+      console.error(error.message);
       showToast("Error", error?.message, "error");
     } finally {
       setIsSaving(false);

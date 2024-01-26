@@ -23,7 +23,7 @@ export const authorizedRoute = async (
     if (!token) {
       return _res
         .status(401)
-        .json({ success: false, message: "Unauthenticated!" });
+        .json({ success: false, message: "User is not logged in!" });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     //@ts-ignore

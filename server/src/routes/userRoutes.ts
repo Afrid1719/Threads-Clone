@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getUserById,
+  getUserByUsername,
   loginUser,
   logoutUser,
   signupUser,
@@ -11,7 +12,8 @@ import { authorizedRoute } from "../middlewares/authorizedRoute";
 
 const router = Router();
 
-router.get("/:id", getUserById);
+router.get("/by-id/:id", getUserById);
+router.get("/by-username/:username", getUserByUsername);
 router.post("/signup", signupUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);

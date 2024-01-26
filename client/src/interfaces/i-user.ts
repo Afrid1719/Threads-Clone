@@ -1,14 +1,14 @@
-export interface IUserWithoutPassword {
-  id?: string;
+export interface IUser {
+  _id?: string;
   name: string;
   username: string;
   email: string;
+  password?: string;
+  profilePic: string;
+  followers?: string[];
+  following?: string[];
   bio: string;
-  profilePic?: string;
-}
-
-export interface IUser extends IUserWithoutPassword {
-  password: string;
+  createdAt?: string;
 }
 export interface IUserSignUpRequest {
   name: string;
@@ -17,14 +17,10 @@ export interface IUserSignUpRequest {
   email: string;
 }
 
-export interface IUserSignUpResponse extends IUserWithoutPassword {}
-
 export interface IUserLoginRequest {
   username: string;
   password: string;
 }
-
-export interface IUserLoginResponse extends IUserWithoutPassword {}
 
 export interface IMessageResponse {
   success: boolean;

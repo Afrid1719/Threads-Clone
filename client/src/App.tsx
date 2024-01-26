@@ -6,13 +6,13 @@ import { Container } from "@chakra-ui/layout";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/AuthPage";
 import { useRecoilValue } from "recoil";
-import { IUserSignUpResponse } from "./interfaces/i-user";
+import { IUser } from "./interfaces/i-user";
 import { userAtom } from "./atoms/userAtom";
 import LogoutButton from "./components/LogoutButton";
 import UpdateProfilePage from "./pages/UpdateProfilePage";
 
 const App = () => {
-  const user: IUserSignUpResponse | null = useRecoilValue(userAtom);
+  const user: IUser | null = useRecoilValue(userAtom);
   return (
     <Container maxW={"620px"}>
       <Header />
