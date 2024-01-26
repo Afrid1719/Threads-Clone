@@ -14,18 +14,20 @@ import {
 import Post from "../models/postModel";
 import { POST_TEXT_MAXLENGTH } from "../utils/constants";
 import { Types } from "mongoose";
+import { v2 as cloudinary } from "cloudinary";
 
 export const createPost = async (
   _req: IAuthenticatedRequest<ICreatePostRequest>,
   _res: Response<IMessageResponse | IPost>
 ) => {
   try {
-    const { postedBy, text, img } = _req.body;
+    let { img } = _req.body;
+    const { postedBy, text } = _req.body;
     const currentUser: IUser = _req.user;
     if (!postedBy || (!text && !img)) {
       return _res.status(400).json({
         success: false,
-        message: "Incomplete fields",
+        message: "PostedBy and Text fields",
       });
     }
     if (postedBy.toString() !== currentUser._id?.toString()) {
@@ -40,7 +42,12 @@ export const createPost = async (
         message: `Text must be less than ${POST_TEXT_MAXLENGTH} characters.`,
       });
     }
-    // Check for Images to be less than 8 MB
+
+    if (img) {
+      const uploadResponse = await cloudinary.uploader.upload(img);
+      img = uploadResponse.secure_url;
+    }
+
     const newPost = new Post({
       postedBy,
       text: text ?? "",
