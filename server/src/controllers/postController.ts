@@ -165,7 +165,7 @@ export const deletePost = async (
 
 export const toggleLike = async (
   _req: IAuthenticatedRequest,
-  _res: Response
+  _res: Response<IMessageResponse>
 ) => {
   try {
     const { id } = _req.params;
@@ -207,7 +207,7 @@ export const toggleLike = async (
 
 export const replyToPost = async (
   _req: IAuthenticatedRequest<IPostReplyRequest>,
-  _res: Response<IMessageResponse | any>
+  _res: Response<IMessageResponse>
 ) => {
   try {
     const { id } = _req.params;

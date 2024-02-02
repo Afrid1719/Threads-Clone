@@ -12,13 +12,13 @@ import { authorizedRoute } from "../middlewares/authorizedRoute";
 
 const router = Router();
 
+router.get("/feeds", authorizedRoute, getFeedPosts);
 router.get("/", getPosts);
 router.get("/:id", getPosts);
-router.get("/feeds", authorizedRoute, getFeedPosts);
 router.post("/", authorizedRoute, createPost);
 router.put("/:id", authorizedRoute, updatePost);
 router.delete("/:id", authorizedRoute, deletePost);
-router.post("/:id/like", authorizedRoute, toggleLike);
-router.post("/:id/reply", authorizedRoute, replyToPost);
+router.put("/:id/like", authorizedRoute, toggleLike);
+router.put("/:id/reply", authorizedRoute, replyToPost);
 
 export default router;
