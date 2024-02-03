@@ -27,7 +27,9 @@ type ActionsProps = {
 
 const Actions = ({ post }: ActionsProps) => {
   const user: IUser = useRecoilValue(userAtom);
-  const [liked, setLiked] = useState<boolean>(post.likes!.includes(user._id!));
+  const [liked, setLiked] = useState<boolean>(
+    post.likes!.includes(user?._id || "")
+  );
   const [cachedPost, setCachedPost] = useState<IPost>(post);
   const [isLiking, setIsLiking] = useState<boolean>(false);
   const [isReplying, setIsReplying] = useState<boolean>(false);

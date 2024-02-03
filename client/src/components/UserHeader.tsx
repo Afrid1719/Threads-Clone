@@ -121,7 +121,7 @@ const UserHeader = ({ user }: UserHeaderProps) => {
           onClick={handleFollowUnfollow}
           isLoading={isUpdating}
         >
-          {following ? "Unfollow" : "Follow"}
+          {following && currentUser ? "Unfollow" : "Follow"}
         </Button>
       )}
       <Flex w={"full"} justifyContent={"space-between"}>

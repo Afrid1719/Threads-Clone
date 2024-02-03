@@ -6,14 +6,18 @@ import { useEffect, useState } from "react";
 import { IPost } from "../interfaces/i-post";
 import useShowToast from "../hooks/useShowToast";
 import { IMessageResponse, IUser } from "../interfaces/i-user";
+import { DeleteIcon } from "@chakra-ui/icons";
+import { useRecoilValue } from "recoil";
+import { userAtom } from "../atoms/userAtom";
 
 type PostProps = {
   post: IPost;
   authorId: string;
 };
 
-const UserPost = ({ post, authorId }: PostProps) => {
+const Post = ({ post, authorId }: PostProps) => {
   const [author, setAuthor] = useState<IUser | null>(null);
+  const currentUser: IUser = useRecoilValue(userAtom);
   const showToast = useShowToast();
   const navigate = useNavigate();
 
@@ -43,14 +47,37 @@ const UserPost = ({ post, authorId }: PostProps) => {
     return;
   }
 
-  const AuthorProfileUrl = `/${author.username}/post/${post._id}`;
+  const AuthorProfileUrl = `/${author.username}`;
   const navigateToProfilePage = (evt: React.MouseEvent<HTMLSpanElement>) => {
     evt.preventDefault();
     navigate(AuthorProfileUrl);
   };
 
+  const handleDeletePost = async () => {
+    try {
+      if (!window.confirm("Are you sure you want to delete this post?")) {
+        return;
+      }
+      const res = await fetch(`/api/posts/${post._id}`, {
+        method: "DELETE",
+      });
+      const data: IMessageResponse = await res.json();
+      if ((data as IMessageResponse).success === false) {
+        showToast("Error", (data as IMessageResponse).message, "error");
+        return;
+      }
+      showToast("Success", "Post deleted successfully!", "success");
+      // TODO: Do not refresh the entire page, rather just re-render the Posts comp
+      navigate(0);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error(error);
+      showToast("Error", error.message, "error");
+    }
+  };
+
   return (
-    <Link to={`${author.username}/post/${post._id}`}>
+    <Link to={AuthorProfileUrl}>
       <Flex gap={3} mb={4} py={5}>
         <Flex flexDirection={"column"} alignItems={"center"}>
           <Avatar
@@ -119,6 +146,9 @@ const UserPost = ({ post, authorId }: PostProps) => {
               >
                 {formatDistanceToNow(new Date(post.createdAt!))} ago
               </Text>
+              {currentUser?._id === author?._id && (
+                <DeleteIcon fontSize={"small"} onClick={handleDeletePost} />
+              )}
             </Flex>
           </Flex>
           <Text fontSize={"sm"}>{post.text}</Text>
@@ -141,4 +171,4 @@ const UserPost = ({ post, authorId }: PostProps) => {
   );
 };
 
-export default UserPost;
+export default Post;

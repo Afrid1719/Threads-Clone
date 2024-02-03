@@ -4,6 +4,7 @@ import {
   deletePost,
   getFeedPosts,
   getPosts,
+  getPostsByUserId,
   replyToPost,
   toggleLike,
   updatePost,
@@ -13,6 +14,7 @@ import { authorizedRoute } from "../middlewares/authorizedRoute";
 const router = Router();
 
 router.get("/feeds", authorizedRoute, getFeedPosts);
+router.get("/user/:authorId", getPostsByUserId);
 router.get("/", getPosts);
 router.get("/:id", getPosts);
 router.post("/", authorizedRoute, createPost);

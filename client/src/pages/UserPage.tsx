@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import UserHeader from "../components/UserHeader";
-import UserPost from "../components/UserPost";
 import { useParams } from "react-router-dom";
 import useShowToast from "../hooks/useShowToast";
 import { IMessageResponse, IUser } from "../interfaces/i-user";
 import { Flex, Spinner } from "@chakra-ui/react";
+import { IPost } from "../interfaces/i-post";
+import Post from "../components/Post";
 
 const UserPage = () => {
   const [user, setUser] = useState<IUser | null>(null);
+  const [posts, setPosts] = useState<IPost[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [fetchingPosts, setFetchingPosts] = useState<boolean>(false);
   const showToast = useShowToast();
   const { username } = useParams();
 
@@ -33,7 +36,28 @@ const UserPage = () => {
       }
     };
 
+    const getPosts = async () => {
+      try {
+        setFetchingPosts(true);
+        const res = await fetch(`/api/posts/user/${username}`);
+        const data: IPost[] | IMessageResponse = await res.json();
+        if ((data as IMessageResponse).success === false) {
+          showToast("Error", (data as IMessageResponse).message, "error");
+          return;
+        }
+        setPosts(data as IPost[]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        console.error(error);
+        showToast("Error", error.message, "error");
+        setPosts([]);
+      } finally {
+        setFetchingPosts(false);
+      }
+    };
+
     getUser();
+    getPosts();
   }, [username, showToast]);
 
   if (!user && loading) {
@@ -51,30 +75,17 @@ const UserPage = () => {
   return (
     <>
       <UserHeader user={user} />
-      <UserPost
-        likes={1200}
-        replies={481}
-        postImg="/post1.png"
-        postTitle="Let's talk about threads."
-      />
-      <UserPost
-        likes={754}
-        replies={41}
-        postImg="/post2.png"
-        postTitle="Let's talk about threads."
-      />
-      <UserPost
-        likes={500}
-        replies={210}
-        postImg="/post3.png"
-        postTitle="Let's talk about threads."
-      />
-      <UserPost
-        likes={112}
-        replies={1}
-        postImg="/post4.png"
-        postTitle="Let's talk about threads."
-      />
+
+      {!fetchingPosts && posts.length === 0 && <h1>User has no posts.</h1>}
+      {fetchingPosts && (
+        <Flex justifyContent={"center"} my={12}>
+          <Spinner size={"xl"} />
+        </Flex>
+      )}
+
+      {posts.map((post: IPost) => (
+        <Post key={post._id} post={post} authorId={post.postedBy} />
+      ))}
     </>
   );
 };

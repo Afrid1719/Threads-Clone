@@ -15,6 +15,7 @@ import Post from "../models/postModel";
 import { POST_TEXT_MAXLENGTH } from "../utils/constants";
 import { Types } from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
+import User from "../models/userModel";
 
 export const createPost = async (
   _req: IAuthenticatedRequest<ICreatePostRequest>,
@@ -153,6 +154,11 @@ export const deletePost = async (
         message: "User is not authorized to delete the post.",
       });
     }
+    if (!!post?.img) {
+      await cloudinary.uploader.destroy(
+        post.img.split("/")?.pop()?.split(".")[0] as string
+      );
+    }
     await Post.findOneAndDelete({ _id: id });
     _res.status(200).json({
       _id: id,
@@ -261,6 +267,37 @@ export const getFeedPosts = async (
       createdAt: -1,
     });
     _res.status(200).json({ feeds });
+  } catch (err: any) {
+    _res.status(500).json({ success: false, message: err.message });
+    console.error(err.message);
+  }
+};
+
+export const getPostsByUserId = async (
+  _req: Request,
+  _res: Response<IMessageResponse | IPost[]>
+) => {
+  try {
+    const author = _req.params?.authorId;
+    const isAuthorIdValid = Types.ObjectId.isValid(author);
+    let result: IPost[] = [];
+    if (isAuthorIdValid) {
+      result = await Post.find({ postedBy: author })
+        .select("-__v")
+        .sort({ createdAt: -1 });
+    } else {
+      const authorFound = await User.findOne({ username: author }).select(
+        "_id"
+      );
+      if (!authorFound) {
+        return _res.json({
+          success: false,
+          message: "User not found!",
+        });
+      }
+      result = await Post.find({ postedBy: authorFound._id }).select("-__v");
+    }
+    return _res.status(200).json(result);
   } catch (err: any) {
     _res.status(500).json({ success: false, message: err.message });
     console.error(err.message);
