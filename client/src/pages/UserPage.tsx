@@ -2,40 +2,20 @@ import { useEffect, useState } from "react";
 import UserHeader from "../components/UserHeader";
 import { useParams } from "react-router-dom";
 import useShowToast from "../hooks/useShowToast";
-import { IMessageResponse, IUser } from "../interfaces/i-user";
+import { IMessageResponse } from "../interfaces/i-user";
 import { Flex, Spinner } from "@chakra-ui/react";
 import { IPost } from "../interfaces/i-post";
 import Post from "../components/Post";
+import useGetUserProfile from "../hooks/useGetUserProfile";
 
 const UserPage = () => {
-  const [user, setUser] = useState<IUser | null>(null);
+  const { user, loading } = useGetUserProfile();
   const [posts, setPosts] = useState<IPost[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
   const [fetchingPosts, setFetchingPosts] = useState<boolean>(false);
   const showToast = useShowToast();
   const { username } = useParams();
 
   useEffect(() => {
-    const getUser = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`api/users/by-username/${username}`);
-        const data: IUser | IMessageResponse = await res.json();
-        if ((data as IMessageResponse).success === false) {
-          console.error(data);
-          showToast("Error", (data as IMessageResponse).message, "error");
-          return;
-        }
-        setUser(data as IUser);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        showToast("Error", error.message, "error");
-        console.error(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     const getPosts = async () => {
       try {
         setFetchingPosts(true);
@@ -56,7 +36,6 @@ const UserPage = () => {
       }
     };
 
-    getUser();
     getPosts();
   }, [username, showToast]);
 

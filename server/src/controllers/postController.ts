@@ -81,10 +81,9 @@ export const getPosts = async (
     if (!id) {
       result = await Post.find().select("-__v").sort({ createdAt: -1 });
     } else {
-      result = await Post.find({ _id: id }).select("-__v");
+      result = (await Post.findOne({ _id: id }).select("-__v")) as IPost;
     }
-    console.log(result);
-    return _res.status(200).json(result);
+    _res.status(200).json(result);
   } catch (err: any) {
     _res.status(500).json({ success: false, message: err.message });
     console.error(err.message);
@@ -243,6 +242,7 @@ export const replyToPost = async (
       username: currentUser.username,
       text,
       userProfilePic: currentUser.profilePic,
+      name: currentUser.name,
     };
     post.replies?.push(reply);
     await post.save();

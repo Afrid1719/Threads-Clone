@@ -77,7 +77,7 @@ const Post = ({ post, authorId }: PostProps) => {
   };
 
   return (
-    <Link to={AuthorProfileUrl}>
+    <Link to={`${AuthorProfileUrl}/post/${post._id}`}>
       <Flex gap={3} mb={4} py={5}>
         <Flex flexDirection={"column"} alignItems={"center"}>
           <Avatar

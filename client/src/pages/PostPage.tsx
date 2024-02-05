@@ -5,54 +5,129 @@ import {
   Divider,
   Flex,
   Image,
+  Spinner,
   Text,
 } from "@chakra-ui/react";
-import { BsThreeDots } from "react-icons/bs";
 import Actions from "../components/Actions";
 import Comment from "../components/Comment";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { IMessageResponse, IUser } from "../interfaces/i-user";
+import useGetUserProfile from "../hooks/useGetUserProfile";
+import { IPost, IReply } from "../interfaces/i-post";
+import { useNavigate, useParams } from "react-router-dom";
+import useShowToast from "../hooks/useShowToast";
+import { formatDistanceToNow } from "date-fns";
+import { DeleteIcon } from "@chakra-ui/icons";
+import { useRecoilValue } from "recoil";
+import { userAtom } from "../atoms/userAtom";
 
 const PostPage = () => {
-  const [liked, setLiked] = useState<boolean>(false);
+  const { user, loading } = useGetUserProfile();
+  const [post, setPost] = useState<IPost | null>(null);
+  const { pid } = useParams();
+  const showToast = useShowToast();
+  const navigate = useNavigate();
+  const currentUser: IUser = useRecoilValue(userAtom);
+
+  useEffect(() => {
+    const getPost = async () => {
+      try {
+        const res = await fetch(`/api/posts/${pid}`);
+        const data: IPost | IMessageResponse = await res.json();
+        if ((data as IMessageResponse).success === false) {
+          console.error((data as IMessageResponse).message);
+          showToast("Failed", (data as IMessageResponse).message, "error");
+        }
+        console.log(data as IPost);
+        setPost(data as IPost);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        console.error(error);
+        showToast("Error", error.message, "error");
+        setPost(null);
+      }
+    };
+
+    getPost();
+  }, [pid, showToast]);
+
+  const handleDeletePost = async () => {
+    if (!post) {
+      return;
+    }
+    try {
+      if (!window.confirm("Are you sure you want to delete this post?")) {
+        return;
+      }
+      const res = await fetch(`/api/posts/${post._id}`, {
+        method: "DELETE",
+      });
+      const data: IMessageResponse = await res.json();
+      if ((data as IMessageResponse).success === false) {
+        showToast("Error", (data as IMessageResponse).message, "error");
+        return;
+      }
+      showToast("Success", "Post deleted successfully!", "success");
+      // TODO: Do not refresh the entire page, rather just re-render the Posts comp
+      navigate(`/${user?.username}`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error(error);
+      showToast("Error", error.message, "error");
+    }
+  };
+
+  if (!user && loading) {
+    return (
+      <Flex justifyContent={"center"}>
+        <Spinner size={"xl"} />
+      </Flex>
+    );
+  }
+
   return (
     <>
       <Flex>
         <Flex gap={3} w={"full"} alignItems={"center"}>
-          <Avatar src="/zuck-avatar.png" size={"md"} name="Mark Zuckerberg" />
+          <Avatar src={user?.profilePic} size={"md"} name={user?.name} />
           <Flex>
             <Text fontSize={"sm"} fontWeight={"bold"}>
-              markzuckerberg
+              {user?.username}
             </Text>
             <Image src="/verified.png" w={4} h={4} ml={4} />
           </Flex>
         </Flex>
-        <Flex gap={4} alignItems={"center"}>
-          <Text fontSize={"sm"} color={"gray.light"}>
-            1d
+        <Flex gap={3} alignItems={"center"}>
+          <Text
+            fontSize={"xs"}
+            width={36}
+            textAlign={"right"}
+            color={"gray.light"}
+          >
+            {formatDistanceToNow(new Date(post?.createdAt ?? ""))} ago
           </Text>
-          <BsThreeDots />
+          {currentUser?._id === user?._id && (
+            <DeleteIcon
+              fontSize={20}
+              onClick={handleDeletePost}
+              cursor={"pointer"}
+            />
+          )}
         </Flex>
       </Flex>
-      <Text my={3}>Let's talk about Threads.</Text>
-      <Box
-        borderRadius={6}
-        overflow={"hidden"}
-        border={"1px solid"}
-        borderColor={"gray.light"}
-      >
-        <Image src="/post1.png" w={"full"} />
-      </Box>
+      <Text my={3}>{post?.text}</Text>
+      {!!post?.img && (
+        <Box
+          borderRadius={6}
+          overflow={"hidden"}
+          border={"1px solid"}
+          borderColor={"gray.light"}
+        >
+          <Image src={post.img} w={"full"} />
+        </Box>
+      )}
       <Flex gap={3} my={3}>
-        <Actions liked={liked} setLiked={setLiked} />
-      </Flex>
-      <Flex gap={2} alignItems={"center"}>
-        <Text color={"gray.light"} fontSize={"sm"}>
-          238 replies
-        </Text>
-        <Box w={0.5} h={0.5} borderRadius={"full"} bg={"gray.light"}></Box>
-        <Text color={"gray.light"} fontSize={"sm"}>
-          {100 + (liked ? 1 : 0)} likes
-        </Text>
+        <Actions post={post!} />
       </Flex>
       <Divider my={4} />
       <Flex justifyContent={"space-between"}>
@@ -63,27 +138,15 @@ const PostPage = () => {
         <Button>Get</Button>
       </Flex>
       <Divider my={4} />
-      <Comment
-        username="janedoe"
-        userAvatar="https://bit.ly/dan-abramov"
-        createdAt="2d"
-        likes={121}
-        comment="This looks great!"
-      />
-      <Comment
-        username="Kent Dodds"
-        userAvatar="https://bit.ly/kent-c-dodds"
-        createdAt="1d"
-        likes={12}
-        comment="Awesome!"
-      />
-      <Comment
-        username="janedoe"
-        userAvatar="https://bit.ly/prosper-baba"
-        createdAt="2d"
-        likes={121}
-        comment="This looks great!"
-      />
+      {post?.replies?.map((reply: IReply) => (
+        <Comment
+          key={reply._id}
+          reply={reply}
+          isLastReply={
+            reply._id === post.replies![post.replies!.length - 1]._id
+          }
+        />
+      ))}
     </>
   );
 };

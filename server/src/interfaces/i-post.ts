@@ -17,6 +17,7 @@ export interface IReply {
   text: string;
   userProfilePic?: string;
   username: string;
+  name: string;
 }
 
 export interface ICreatePostRequest {

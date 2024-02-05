@@ -10,8 +10,10 @@ export interface IPost {
 }
 
 export interface IReply {
+  _id?: string;
   userId: string;
   text: string;
   userProfilePic?: string;
   username: string;
+  name: string;
 }
